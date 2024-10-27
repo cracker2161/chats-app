@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Chat Server</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    body { 
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 0; 
+      padding: 0; 
+      background: #f4f4f9; 
+      overflow-x: hidden; 
+    }
+    header { 
+      background: #6200ea; 
+      color: #fff; 
+      padding: 10px; 
+      text-align: center; 
+      position: relative; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    #menu { 
+      position: absolute; 
+      top: 10px; 
+      right: 10px; 
+      cursor: pointer; 
+      font-size: 1.5em; 
+    }
+    #chat { 
+      margin: 20px auto; 
+      max-width: 600px; 
+      background: #fff; 
+      border-radius: 8px; 
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+      padding: 20px; 
+    }
+    #messages { 
+      list-style-type: none; 
+      padding: 0; 
+      max-height: 300px; 
+      overflow-y: scroll; 
+      border-bottom: 1px solid #ddd; 
+      margin-bottom: 20px; 
+    }
+    #messages li { 
+      padding: 8px 10px; 
+      border-bottom: 1px solid #f1f1f1; 
+    }
+    #form { 
+      display: flex; 
+      margin-top: 10px; 
+    }
+    #input { 
+      flex-grow: 1; 
+      padding: 10px; 
+      border: 1px solid #ccc; 
+      border-radius: 4px 0 0 4px; 
+    }
+    button { 
+      padding: 10px; 
+      background: #6200ea; 
+      color: #fff; 
+      border: none; 
+      border-radius: 0 4px 4px 0; 
+      cursor: pointer; 
+    }
+    button:hover { 
+      background: #3700b3; 
+    }
+    #sidebar { 
+      position: fixed; 
+      top: 0; 
+      right: -250px; 
+      width: 250px; 
+      height: 100%; 
+      background: #3700b3; 
+      color: #fff; 
+      transition: right 0.3s; 
+      padding: 20px; 
+      box-shadow: -2px 0 5px rgba(0,0,0,0.5);
+      overflow-y: auto;
+      display: none;
+    }
+    #sidebar.active { 
+      right: 0; 
+      display: block; 
+    }
+    #sidebar ul { 
+      padding: 0; 
+      list-style: none; 
+    }
+    #sidebar li { 
+      margin: 15px 0; 
+    }
+    #close { 
+      position: absolute; 
+      top: 10px; 
+      left: 10px; 
+      cursor: pointer; 
+      font-size: 1.5em; 
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Public Chat Room</h1>
+    <div id="menu"><i class="fas fa-bars"></i></div>
+  </header>
+  <div id="chat">
+    <ul id="messages"></ul>
+    <form id="form" action="">
+      <input id="input" autocomplete="off" placeholder="Type your message here..." />
+      <button>Send</button>
+    </form>
+  </div>
+
+  <div id="sidebar">
+    <div id="close"><i class="fas fa-times"></i></div>
+    <ul>
+      <li><strong><i class="fas fa-user"></i> User: <span id="usernameDisplay"></span></strong></li>
+      <li>Settings</li>
+      <li>Profile</li>
+      <li>Notifications</li>
+      <li>Help</li>
+      <!-- Add more features here -->
+    </ul>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+    const form = document.getElementById('form');
+    const input = document.getElementById('input');
+    const messages = document.getElementById('messages');
+    const menuButton = document.getElementById('menu');
+    const sidebar = document.getElementById('sidebar');
+    const usernameDisplay = document.getElementById('usernameDisplay');
+    const closeButton = document.getElementById('close');
+
+    let username = '';
+
+    function updateUsername() {
+      username = prompt('Enter your username:');
+      if (username) {
+        usernameDisplay.textContent = username;
+      } else {
+        alert('You must enter a username to chat.');
+        updateUsername();
+      }
+    }
+
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+      if (!username) {
+        updateUsername();
+      }
+      if (input.value) {
+        socket.emit('chat message', `${username}: ${input.value}`);
+        input.value = '';
+      }
+    });
+
+    socket.on('chat message', function(msg) {
+      const item = document.createElement('li');
+      item.textContent = msg;
+      messages.appendChild(item);
+      messages.scrollTop = messages.scrollHeight;
+    });
+
+    menuButton.addEventListener('click', function() {
+      sidebar.classList.toggle('active');
+    });
+
+    closeButton.addEventListener('click', function() {
+      sidebar.classList.remove('active');
+    });
+
+    // Prompt for username on first load
+    updateUsername();
+  </script>
+</body>
+</html>
